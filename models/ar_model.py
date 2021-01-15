@@ -11,7 +11,7 @@ data = pd.read_csv("../sealevel_data.csv")
 
 
 ### Plot sealevel ###
-plt.plot( data["GMSLNA"])
+plt.plot(data["year"],data["GMSLNA"])
 plt.show()
 
 x = data["GMSLNA"]
