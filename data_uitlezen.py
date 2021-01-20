@@ -52,6 +52,19 @@ for a in data["GMSLNA"]:
     temp =+a
     i +=1
 
-print(januari)
+data = [januari,februari,maart,april,mei,juni,juli,augustus,september,oktober,november,december]
+
+import matplotlib.pyplot as plt
+import numpy as np
+years = np.arange(1992, 2021).astype("str")
+dataframe = pd.DataFrame(data, columns=years, index=["january", "february", "march", "april", "may", "june", "july", "augustus", "september", "october", "november","december"])
+
+dataframe["2010"].plot()
+plt.show()
+
+
+dataframe_wide = dataframe.unstack()
+dataframe_wide.plot()
+plt.show()
     
     
