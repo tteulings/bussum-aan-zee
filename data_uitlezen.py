@@ -58,13 +58,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 years = np.arange(1992, 2021).astype("str")
 dataframe = pd.DataFrame(data, columns=years, index=["january", "february", "march", "april", "may", "june", "july", "augustus", "september", "october", "november","december"])
+dataframe_wide = pd.DataFrame(dataframe.unstack().dropna())
 
-from statsmodels.tsa.seasonal import seasonal_decompose
-dataframe_wide = dataframe.unstack().dropna()
+# dataframe_wide["year"] = dataframe_wide.index.get_level_values(0)
+# dataframe_wide["month"] = dataframe_wide.index.get_level_values(1)
 
+dataframe_wide = dataframe_wide.reset_index()
+dataframe_wide = dataframe_wide.rename(columns={0:"GMSLNA", "level_0": "year"})
 print(dataframe_wide)
-decomp = seasonal_decompose(dataframe_wide[["2020", "augustus"]])
-# dataframe_wide.plot(style='.-')
-# plt.show()
+
+
+dataframe_wide.to_csv("monthly_sealevel_data")
     
     
