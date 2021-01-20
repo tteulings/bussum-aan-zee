@@ -59,12 +59,12 @@ import numpy as np
 years = np.arange(1992, 2021).astype("str")
 dataframe = pd.DataFrame(data, columns=years, index=["january", "february", "march", "april", "may", "june", "july", "augustus", "september", "october", "november","december"])
 
-dataframe["2010"].plot()
-plt.show()
+from statsmodels.tsa.seasonal import seasonal_decompose
+dataframe_wide = dataframe.unstack().dropna()
 
-
-dataframe_wide = dataframe.unstack()
-dataframe_wide.plot()
-plt.show()
+print(dataframe_wide)
+decomp = seasonal_decompose(dataframe_wide[["2020", "augustus"]])
+# dataframe_wide.plot(style='.-')
+# plt.show()
     
     
