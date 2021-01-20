@@ -49,7 +49,7 @@ for a in data["GMSLNA"]:
         
         j+=1
         temp = 0
-    temp =+a
+    temp += a
     i +=1
 
 data = [januari,februari,maart,april,mei,juni,juli,augustus,september,oktober,november,december]
@@ -64,10 +64,9 @@ dataframe_wide = pd.DataFrame(dataframe.unstack().dropna())
 # dataframe_wide["month"] = dataframe_wide.index.get_level_values(1)
 
 dataframe_wide = dataframe_wide.reset_index()
-dataframe_wide = dataframe_wide.rename(columns={0:"GMSLNA", "level_0": "year"})
-print(dataframe_wide)
+dataframe_wide = dataframe_wide.rename(columns={0:"GMSLNA", "level_0": "year", "level_1":"month"})
 
 
-dataframe_wide.to_csv("monthly_sealevel_data")
+dataframe_wide.to_csv("monthly_sealevel_data.csv")
     
     
