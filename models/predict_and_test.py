@@ -5,43 +5,36 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 
+def forecast(model_name):
+    model_forcasts={"AR":ar_forecast, "ARM": arima_forecast}
 
-# ### RANDOM FORREST
-# def random_forrest(data, test):
-#     from sklearn import model_selection
-#     from sklearn.tree import DecisionTreeRegressor
-#     from sklearn.ensemble import RandomForestRegressor
-#     from sklearn.metrics import r2_score
-#     from sklearn.metrics import mean_squared_error
-#     from math import sqrt
+    forecast_func = model_forcasts[model_name]
 
-#     X_train = data
-#     y_train = data["GMSLNA"]
+    data = pd.read_csv("../monthly_sealevel_data.csv")
+    sealevel_data = data[["year", "GMSLNA"]]
 
-#     print(y_train)
-#     X_test = test
-#     y_test = test["GMSLNA"]
+    forecast_func(sealevel_data, 2020)
 
-#     #RF model
-#     model_rf = RandomForestRegressor(n_estimators=5000, oob_score=True, random_state=100)
-#     model_rf.fit(X_train, y_train) 
-#     pred_train_rf= model_rf.predict(X_train)
-#     # print(np.sqrt(mean_squared_error(y_train,pred_train_rf)))
-#     # print(r2_score(y_train, pred_train_rf))
-#     # plt.plot(pred_train_rf)
-#     # plt.plot(y_train)
-#     # plt.show()
-#     pred_test_rf = model_rf.predict(X_test)
-#     # oos_prediction = model_rf.predict()
-#     # print(pred_test_rf)
-#     # print(np.sqrt(mean_squared_error(y_test,pred_test_rf)))
-#     # print(r2_score(y_test, pred_test_rf))
-#     # print(X_test)
-#     pred_test_rf = pd.DataFrame(pred_test_rf, index=X_test.index.values)
 
-#     # plt.plot(pred_test_rf)
-#     # plt.show()
-#     return model_rf, pred_test_rf, pred_train_rf
+def ar_forecast(data, end_year, start_year=2020):
+    model = ar_model(data)
+    xp = np.arange(start_year, end_year, 1/37)
+
+    y_forecast = model.predict(start = 1019, end = 1500)
+
+    plt.plot(y_forecast)
+    plt.plot(data[["GMSLNA"]])
+    plt.show()
+    
+def arima_forecast(data, end_year, start_year=2020):
+    model = arima_model(data["GMSLNA"])
+    xp = np.arange(start_year, end_year, 1/37)
+
+    y_forecast = model.predict(start = 341, end = 500)
+
+    plt.plot(y_forecast)
+    plt.plot(data[["GMSLNA"]])
+    plt.show()
 
 
 ### AR4 MODEL ###
@@ -56,7 +49,7 @@ def ar_predict(data, test):
 def ar_model(data):
     from statsmodels.tsa.ar_model import AutoReg, ar_select_order
 
-    sel = ar_select_order(data["GMSLNA"], 20, old_names=False, seasonal=True, period=37)
+    sel = ar_select_order(data["GMSLNA"], 20, old_names=False, seasonal=True, period=12)
     res = sel.model.fit()
 
     return res
@@ -69,7 +62,7 @@ def random_walk(data, test):
     import pmdarima as pm
  
 
-    mod = ARIMA(data, seasonal_order=(0, 1, 0, 37))
+    mod = ARIMA(data, seasonal_order=(0, 1, 0, 12))
     res = mod.fit()
 
     oos_predictions = res.predict(start=test.index.values[0], end=test.index.values[-1])
@@ -78,10 +71,8 @@ def random_walk(data, test):
 
 def predict_arima(data, test):
     
-    print(data)
     res = arima_model(data)
     oos_predictions = res.predict(start=test.index.values[0], end=test.index.values[-1])
-    print(oos_predictions)
     oos_predictions = pd.DataFrame(oos_predictions, index=test.index.values)
 
     return res, oos_predictions, res.bic
@@ -90,17 +81,13 @@ def arima_model(data):
     import pmdarima as pm
     
     # model = pm.auto_arima(data, d=1, D=1,
-    #                   m=37, trend='c', seasonal=True, 
-    #                   start_p=2, start_q=0, max_order=3, test='adf',
+    #                   m=12, trend='c', seasonal=True, 
+    #                   start_p=0, start_q=0, max_order=10, test='adf',
     #                   stepwise=False, trace=True)
     from statsmodels.tsa.arima.model import ARIMA
 
-    # model = pm.ARIMA((2,1,0), (2, 1, 0, 37)).fit(data)
 
-    mod = ARIMA(data, order=(3,1,0),seasonal_order=(2, 1, 0, 37)).fit()
-    # print(model.summary())
-    print(mod.summary())
-
+    mod = ARIMA(data, order=(1,1,2),seasonal_order=(1, 1, 2, 12)).fit()
 
     return mod
 
@@ -142,7 +129,7 @@ def predict_and_test(model_name):
 
     print(f"Predicting and testing {model_name}")
 
-    data = pd.read_csv("../sealevel_data.csv")
+    data = pd.read_csv("../monthly_sealevel_data.csv")
     sealevel_data = data[["GMSLNA"]]
     train, test = train_test_split(sealevel_data, shuffle=False, train_size=0.8)
 
@@ -153,9 +140,9 @@ def predict_and_test(model_name):
 
 
 def predict_and_test_all():
-    data = pd.read_csv("../sealevel_data.csv")
+    data = pd.read_csv("../monthly_sealevel_data.csv")
     sealevel_data = data[["year", "GMSLNA"]]
-    train_w_year, test_w_year = train_test_split(sealevel_data, shuffle=False, train_size=0.8)
+    train_w_year, test_w_year = train_test_split(sealevel_data, shuffle=False, train_size=0.9)
     train, test = train_w_year[["GMSLNA"]], test_w_year[["GMSLNA"]]
 
     
@@ -164,10 +151,8 @@ def predict_and_test_all():
     for i, (model_name, model) in enumerate(model_functions.items()):
         print(f"Predicting and testing {model_name}")
         model, oos_predictions, bic = model(train, test)
-        
-        oos_predictions = oos_predictions.rename(index=test_w_year["year"])
-        
-        ax[i].plot(sealevel_data["year"], sealevel_data["GMSLNA"])
+                
+        ax[i].plot(sealevel_data["GMSLNA"], ".-")
         ax[i].plot(oos_predictions)
         ax[i].set_title(f"{model_name}, MSE: {mean_squared_error(oos_predictions, test)}, BIC: {bic}")
 
@@ -175,39 +160,6 @@ def predict_and_test_all():
 
     plt.show()
 
-
-def forecast(model_name):
-    model_forcasts={"AR":ar_forecast, "ARM": arima_forecast}
-
-    forecast_func = model_forcasts[model_name]
-
-    data = pd.read_csv("../sealevel_data.csv")
-    sealevel_data = data[["year", "GMSLNA"]]
-
-    forecast_func(sealevel_data, 2020)
-
-
-def ar_forecast(data, end_year, start_year=2020):
-
-    model = ar_model(data)
-    xp = np.arange(start_year, end_year, 1/37)
-
-    y_forecast = model.predict(start = 1019, end = 1500)
-
-    plt.plot(y_forecast)
-    plt.plot(data[["GMSLNA"]])
-    plt.show()
-    
-def arima_forecast(data, end_year, start_year=2020):
-
-    model = arima_model(data["GMSLNA"])
-    xp = np.arange(start_year, end_year, 1/37)
-
-    y_forecast = model.predict(start = 1019, end = 1500)
-
-    plt.plot(y_forecast)
-    plt.plot(data[["GMSLNA"]])
-    plt.show()
     
 
 
@@ -217,6 +169,11 @@ def arima_forecast(data, end_year, start_year=2020):
 # predict_and_test("RW")
 # predict_and_test("ARM")
 
-# predict_and_test_all()
+predict_and_test_all()
 
-forecast("ARM")
+# data = pd.read_csv("../monthly_sealevel_data.csv")
+# sealevel_data = data[["GMSLNA"]]
+
+# arima_model(sealevel_data)
+# forecast("ARM")
+

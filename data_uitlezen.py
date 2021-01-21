@@ -61,12 +61,19 @@ dataframe = pd.DataFrame(data, columns=years, index=["january", "february", "mar
 dataframe_wide = pd.DataFrame(dataframe.unstack().dropna())
 
 # dataframe_wide["year"] = dataframe_wide.index.get_level_values(0)
-# dataframe_wide["month"] = dataframe_wide.index.get_level_values(1)
 
 dataframe_wide = dataframe_wide.reset_index()
 dataframe_wide = dataframe_wide.rename(columns={0:"GMSLNA", "level_0": "year", "level_1":"month"})
+dataframe_wide["month/year"] = dataframe_wide["month"] + "-" + dataframe_wide["year"]
 
 
 dataframe_wide.to_csv("monthly_sealevel_data.csv")
+
+from statsmodels.tsa.api import acf, pacf, graphics
+
+
+graphics.plot_acf(dataframe_wide["GMSLNA"])
+
+plt.show()
     
     
